@@ -561,6 +561,8 @@
     function parseNumericInput(str) {
       if (!str) return NaN;
       str = str.trim().replace(/\s+/g, "");
+      // Allow optional percent sign in the input
+      str = str.replace(/%/g, "");
       str = str.replace(",", ".");
       const val = Number(str);
       return isNaN(val) ? NaN : val;
