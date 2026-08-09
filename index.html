@@ -401,7 +401,7 @@
   <div class="app-container">
     <header>
       <h1>Percent Change: Increase and Decrease</h1>
-      <p class="subtitle">Calculate the percentage increase or percentage decrease between two amounts.</p>
+      <p class="subtitle">Calculate the percentage increase or percentage decrease between two amounts. A calculator is recommended.</p>
     </header>
 
     <div class="mode-toggle" role="tablist" aria-label="Mode selector">
@@ -512,7 +512,7 @@
       </div>
       <div class="worksheet">
         <div class="worksheet-header">
-          Instruction: For each question, calculate the percentage increase or percentage decrease.
+          Instruction: For each question, calculate the percentage increase or percentage decrease and round as instructed.
         </div>
         <ol id="worksheet-list" class="worksheet-list">
           <!-- Worksheet questions injected here -->
@@ -558,6 +558,10 @@
       return str + "%";
     }
 
+    function formatRoundedPercent(value, decimalPlaces) {
+      return Number(value).toFixed(decimalPlaces) + "%";
+    }
+
     function parseNumericInput(str) {
       if (!str) return NaN;
       str = str.trim().replace(/\s+/g, "");
@@ -577,18 +581,36 @@
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    const EASY_ORIGINALS = [4, 5, 8, 10, 20, 25, 40, 50];
-    const MEDIUM_ORIGINALS = [12, 16, 18, 24, 30, 32, 36, 45, 48, 60, 80];
-    const HARD_ORIGINALS = [75, 80, 84, 90, 96, 100, 120, 125, 150, 160, 180];
+    const DIFFICULTY_SETTINGS = {
+      easy: {
+        originalMin: 10,
+        originalMax: 120,
+        changeMin: 2,
+        changeMax: 60,
+        decimalPlaces: 0,
+        roundingText: "Round your answer to the nearest whole percent."
+      },
+      medium: {
+        originalMin: 40,
+        originalMax: 750,
+        changeMin: 7,
+        changeMax: 325,
+        decimalPlaces: 1,
+        roundingText: "Round your answer to the nearest tenth of a percent."
+      },
+      hard: {
+        originalMin: 125,
+        originalMax: 5000,
+        changeMin: 19,
+        changeMax: 4200,
+        decimalPlaces: 2,
+        roundingText: "Round your answer to the nearest hundredth of a percent."
+      }
+    };
 
-    const EASY_PERCENTS = [10, 20, 25, 30, 40, 50, 60];
-    const MEDIUM_PERCENTS = [10, 15, 20, 25, 30, 40, 50, 60];
-    const HARD_PERCENTS_WHOLE = [10, 15, 20, 25, 30, 40, 50, 60, 75, 80, 90];
-    const HARD_PERCENTS_DECIMAL = [12.5, 37.5];
-    const HARD_BIG_PERCENTS = [120, 150]; // >100% increases
-
-    function isInteger(value) {
-      return Math.abs(value - Math.round(value)) < 1e-9;
+    function roundToPlaces(value, places) {
+      const factor = Math.pow(10, places);
+      return Math.round((value + Number.EPSILON) * factor) / factor;
     }
 
     function generatePercentChangeQuestion(difficulty) {
@@ -597,96 +619,77 @@
         diff = chooseRandom(["easy", "medium", "hard"]);
       }
 
-      let originals, percents, allowDecimals;
-      if (diff === "easy") {
-        originals = EASY_ORIGINALS;
-        percents = EASY_PERCENTS;
-        allowDecimals = false;
-      } else if (diff === "medium") {
-        originals = MEDIUM_ORIGINALS;
-        percents = MEDIUM_PERCENTS;
-        allowDecimals = false;
-      } else {
-        originals = HARD_ORIGINALS;
-        allowDecimals = true;
-      }
-
+      const settings = DIFFICULTY_SETTINGS[diff];
       let tries = 0;
-      while (tries < 200) {
+
+      while (tries < 300) {
         tries++;
 
-        const original = chooseRandom(originals);
+        const original = getRandomInt(settings.originalMin, settings.originalMax);
+        const direction = Math.random() < 0.5 ? "increase" : "decrease";
 
-        let percent;
-        let isBig = false;
-        if (diff === "hard") {
-          const bigChance = Math.random() < 0.15; // some >100% cases
-          if (bigChance) {
-            percent = chooseRandom(HARD_BIG_PERCENTS);
-            isBig = true;
-          } else {
-            const useDecimal = Math.random() < 0.35; // some decimal percents
-            if (useDecimal) {
-              percent = chooseRandom(HARD_PERCENTS_DECIMAL);
-            } else {
-              percent = chooseRandom(HARD_PERCENTS_WHOLE);
-            }
-          }
-        } else {
-          percent = chooseRandom(percents);
+        let maxChange = settings.changeMax;
+        if (direction === "decrease") {
+          maxChange = Math.min(maxChange, original - 1);
         }
+        if (maxChange < settings.changeMin) continue;
 
-        let direction;
-        if (isBig) {
-          direction = "increase"; // can't have >100% decrease
-        } else {
-          direction = Math.random() < 0.5 ? "increase" : "decrease";
-        }
+        const changeAmount = getRandomInt(settings.changeMin, maxChange);
+        const newAmount = direction === "increase"
+          ? original + changeAmount
+          : original - changeAmount;
 
-        let diffAmount = original * (percent / 100);
-        if (!isInteger(diffAmount)) {
-          continue; // ensure new amount integer
-        }
-        diffAmount = Math.round(diffAmount);
+        const exactPercent = (changeAmount / original) * 100;
+        const roundedPercent = roundToPlaces(exactPercent, settings.decimalPlaces);
 
-        let newAmount;
-        if (direction === "increase") {
-          newAmount = original + diffAmount;
-        } else {
-          newAmount = original - diffAmount;
-          if (newAmount <= 0) continue;
-        }
-
-        // Final percent stored as numeric (possibly decimal)
-        const percentChange = percent;
+        // Avoid questions whose rounded answer is 0%, and avoid overly neat answers
+        // too often so the modes genuinely practise calculator use.
+        if (roundedPercent <= 0) continue;
+        const isVeryNeat = Math.abs(exactPercent - Math.round(exactPercent)) < 1e-9;
+        if (isVeryNeat && Math.random() < 0.8) continue;
 
         return {
           difficulty: diff,
           original: original,
           newAmount: newAmount,
-          percentChange: percentChange,
+          changeAmount: changeAmount,
+          exactPercent: exactPercent,
+          percentChange: roundedPercent,
+          decimalPlaces: settings.decimalPlaces,
+          roundingText: settings.roundingText,
           direction: direction
         };
       }
 
-      // Fallback if something fails
+      // Fallback
+      const fallback = {
+        easy: { original: 37, newAmount: 52 },
+        medium: { original: 286, newAmount: 347 },
+        hard: { original: 1375, newAmount: 984 }
+      }[diff];
+      const direction = fallback.newAmount > fallback.original ? "increase" : "decrease";
+      const changeAmount = Math.abs(fallback.newAmount - fallback.original);
+      const exactPercent = (changeAmount / fallback.original) * 100;
       return {
         difficulty: diff,
-        original: 20,
-        newAmount: 30,
-        percentChange: 50,
-        direction: "increase"
+        original: fallback.original,
+        newAmount: fallback.newAmount,
+        changeAmount,
+        exactPercent,
+        percentChange: roundToPlaces(exactPercent, settings.decimalPlaces),
+        decimalPlaces: settings.decimalPlaces,
+        roundingText: settings.roundingText,
+        direction
       };
     }
 
     function questionToText(q) {
       const originalStr = formatNumber(q.original);
       const newStr = formatNumber(q.newAmount);
-      if (q.direction === "increase") {
-        return "An amount increased from " + originalStr + " to " + newStr + ". Calculate the percentage increase.";
-      } else {
-        return "An amount decreased from " + originalStr + " to " + newStr + ". Calculate the percentage decrease.";
-      }
+      const task = q.direction === "increase"
+        ? "An amount increased from " + originalStr + " to " + newStr + ". Calculate the percentage increase."
+        : "An amount decreased from " + originalStr + " to " + newStr + ". Calculate the percentage decrease.";
+      return task + " " + q.roundingText;
     }
 
     // ---------- Game state ----------
@@ -858,7 +861,7 @@
             " | Your answer: " +
             (item.userAnswer === "" ? "[no answer]" : item.userAnswer) +
             " | Correct: " +
-            formatPercent(item.correctPercent);
+            formatRoundedPercent(item.correctPercent, item.decimalPlaces);
           ul.appendChild(li);
         });
         incorrectList.appendChild(ul);
@@ -871,14 +874,16 @@
       const diff = n - o;
       const absDiff = Math.abs(diff);
       const frac = absDiff / o;
+      const exactPercent = frac * 100;
       const percent = q.percentChange;
       const lines = [];
 
       lines.push("Original amount: " + formatNumber(o));
       lines.push("New amount: " + formatNumber(n));
       lines.push("Difference: " + formatNumber(absDiff));
-      lines.push("Fraction: " + formatNumber(absDiff) + " ÷ " + formatNumber(o) + " = " + frac.toFixed(4));
-      lines.push("Percent change: " + frac.toFixed(4) + " × 100 = " + formatPercent(percent));
+      lines.push("Fraction: " + formatNumber(absDiff) + " ÷ " + formatNumber(o) + " = " + frac.toFixed(6));
+      lines.push("Unrounded percent: " + frac.toFixed(6) + " × 100 = " + exactPercent.toFixed(6) + "%");
+      lines.push(q.roundingText + " Answer: " + formatRoundedPercent(percent, q.decimalPlaces));
 
       if (q.direction === "increase") {
         lines.push("This is a percentage increase.");
@@ -901,14 +906,14 @@
 
       const trimmed = rawInput.trim();
       const userVal = parseNumericInput(trimmed);
-      const correctVal = Math.round(currentQuestion.percentChange * 100) / 100;
+      const correctVal = roundToPlaces(currentQuestion.exactPercent, currentQuestion.decimalPlaces);
 
       stats.total += 1;
 
       let isCorrect = false;
       if (!timeUp && !isNaN(userVal)) {
-        const roundedUser = Math.round(userVal * 100) / 100;
-        if (Math.abs(roundedUser - correctVal) < 0.005) {
+        const tolerance = 0.5 / Math.pow(10, currentQuestion.decimalPlaces + 2);
+        if (Math.abs(userVal - correctVal) < tolerance) {
           isCorrect = true;
         }
       }
@@ -939,7 +944,7 @@
           feedbackMessage.textContent = "Incorrect.";
         }
         feedbackMessage.className = "feedback-message incorrect";
-        correctAnswerLine.textContent = "Correct answer: " + formatPercent(correctVal);
+        correctAnswerLine.textContent = "Correct answer: " + formatRoundedPercent(correctVal, currentQuestion.decimalPlaces);
         showStepsBtn.style.display = "inline-block";
         stepsContainer.textContent = "";
         beepIncorrect();
@@ -947,7 +952,8 @@
         stats.incorrect.push({
           questionText: questionToText(currentQuestion),
           userAnswer: trimmed,
-          correctPercent: correctVal
+          correctPercent: correctVal,
+          decimalPlaces: currentQuestion.decimalPlaces
         });
       }
 
@@ -982,6 +988,8 @@
       const diff = worksheetDifficulty.value;
       const count = parseInt(worksheetCount.value, 10) || 10;
       worksheetList.innerHTML = "";
+      document.querySelector(".worksheet-header").textContent =
+        "Instruction: Calculate each percentage change. " + DIFFICULTY_SETTINGS[diff].roundingText;
 
       for (let i = 0; i < count; i++) {
         const q = generateWorksheetQuestion(diff);
@@ -995,7 +1003,7 @@
 
         const answerLine = document.createElement("div");
         answerLine.className = "answer-line";
-        answerLine.innerHTML = "Answer: <span class=\"answer\">" + formatPercent(q.percentChange) + "</span>";
+        answerLine.innerHTML = "Answer: <span class=\"answer\">" + formatRoundedPercent(q.percentChange, q.decimalPlaces) + "</span>";
         li.appendChild(answerLine);
 
         const revealBtn = document.createElement("button");
@@ -1129,91 +1137,33 @@
       const results = [];
       function log(msg) { results.push(msg); }
 
-      // 1. Easy answers are whole percents
-      let easyWhole = true;
-      for (let i = 0; i < 50; i++) {
-        const q = generatePercentChangeQuestion("easy");
-        if (q.percentChange % 1 !== 0) {
-          easyWhole = false;
-          log("Easy percent not whole: " + q.percentChange);
-          break;
-        }
+      const samples = { easy: [], medium: [], hard: [] };
+      for (const diff of Object.keys(samples)) {
+        for (let i = 0; i < 100; i++) samples[diff].push(generatePercentChangeQuestion(diff));
       }
-      log("Test 1 (Easy percents whole): " + (easyWhole ? "PASS" : "FAIL"));
 
-      // 2. Medium answers are whole percents
-      let medWhole = true;
-      for (let i = 0; i < 50; i++) {
-        const q = generatePercentChangeQuestion("medium");
-        if (q.percentChange % 1 !== 0) {
-          medWhole = false;
-          log("Medium percent not whole: " + q.percentChange);
-          break;
-        }
-      }
-      log("Test 2 (Medium percents whole): " + (medWhole ? "PASS" : "FAIL"));
+      const easyWhole = samples.easy.every(q => q.decimalPlaces === 0 && q.percentChange === Math.round(q.percentChange));
+      log("Test 1 (Easy rounds to whole percent): " + (easyWhole ? "PASS" : "FAIL"));
 
-      // 3. Hard decimals <= 2 dp
-      let hardOk = true;
-      for (let i = 0; i < 100; i++) {
-        const q = generatePercentChangeQuestion("hard");
-        const str = q.percentChange.toString();
-        if (str.includes(".")) {
-          const dec = str.split(".")[1];
-          if (dec.length > 2) {
-            hardOk = false;
-            log("Hard percent >2 dp: " + q.percentChange);
-            break;
-          }
-        }
-      }
-      log("Test 3 (Hard percents <= 2dp): " + (hardOk ? "PASS" : "FAIL"));
+      const mediumTenths = samples.medium.every(q => q.decimalPlaces === 1 && Math.abs(q.percentChange * 10 - Math.round(q.percentChange * 10)) < 1e-9);
+      log("Test 2 (Medium rounds to tenths): " + (mediumTenths ? "PASS" : "FAIL"));
 
-      // 4. Some hard questions >100%
-      let hasBig = false;
-      for (let i = 0; i < 100; i++) {
-        const q = generatePercentChangeQuestion("hard");
-        if (q.percentChange > 100) {
-          hasBig = true;
-          break;
-        }
-      }
-      log("Test 4 (Some Hard >100%): " + (hasBig ? "PASS" : "FAIL"));
+      const hardHundredths = samples.hard.every(q => q.decimalPlaces === 2 && Math.abs(q.percentChange * 100 - Math.round(q.percentChange * 100)) < 1e-9);
+      log("Test 3 (Hard rounds to hundredths): " + (hardHundredths ? "PASS" : "FAIL"));
 
-      // 5. No negative percents
-      let noNeg = true;
-      for (let i = 0; i < 100; i++) {
-        const q = generatePercentChangeQuestion("random");
-        if (q.percentChange < 0) {
-          noNeg = false;
-          log("Negative percent found: " + q.percentChange);
-          break;
-        }
-      }
-      log("Test 5 (No negative percents): " + (noNeg ? "PASS" : "FAIL"));
+      const calculatorVariety = Object.values(samples).flat().filter(q => Math.abs(q.exactPercent - Math.round(q.exactPercent)) > 1e-9).length > 250;
+      log("Test 4 (Mostly calculator-style answers): " + (calculatorVariety ? "PASS" : "FAIL"));
 
-      // 6. New amount integer
-      let ints = true;
-      for (let i = 0; i < 100; i++) {
-        const q = generatePercentChangeQuestion("random");
-        if (!isInteger(q.newAmount)) {
-          ints = false;
-          log("New amount not integer: " + q.newAmount);
-          break;
-        }
-      }
-      log("Test 6 (New amount integer): " + (ints ? "PASS" : "FAIL"));
+      const validAmounts = Object.values(samples).flat().every(q => q.original > 0 && q.newAmount > 0 && Number.isInteger(q.original) && Number.isInteger(q.newAmount));
+      log("Test 5 (Positive whole-number amounts): " + (validAmounts ? "PASS" : "FAIL"));
 
-      // 7. Random covers all difficulties
+      const directions = Object.values(samples).flat().reduce((a,q) => (a[q.direction]=true,a), {increase:false,decrease:false});
+      log("Test 6 (Increase and decrease included): " + (directions.increase && directions.decrease ? "PASS" : "FAIL"));
+
       let coverage = {easy:false, medium:false, hard:false};
-      for (let i = 0; i < 100; i++) {
-        const q = generatePercentChangeQuestion("random");
-        coverage[q.difficulty] = true;
-      }
-      const allCov = coverage.easy && coverage.medium && coverage.hard;
-      log("Test 7 (Random covers all): " + (allCov ? "PASS" : "FAIL"));
+      for (let i = 0; i < 100; i++) coverage[generatePercentChangeQuestion("random").difficulty] = true;
+      log("Test 7 (Random covers all difficulties): " + (coverage.easy && coverage.medium && coverage.hard ? "PASS" : "FAIL"));
 
-      // 8. Worksheet count
       const testCount = 7;
       worksheetCount.value = testCount.toString();
       worksheetDifficulty.value = "easy";
@@ -1221,11 +1171,9 @@
       const liCount = worksheetList.querySelectorAll("li").length;
       log("Test 8 (Worksheet count): " + (liCount === testCount ? "PASS" : "FAIL"));
 
-      // 9. Thousands separator
       const formatted = formatNumber(12345.67);
       log("Test 9 (Thousands separator spaces): " + (formatted === "12 345.67" ? "PASS" : "FAIL") + " (" + formatted + ")");
 
-      // 10. High contrast toggle
       const prev = document.body.classList.contains("high-contrast");
       document.body.classList.toggle("high-contrast", true);
       const after = document.body.classList.contains("high-contrast");
