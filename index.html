@@ -1,1204 +1,249 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Percent Change: Increase and Decrease</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    :root {
-      --bg: #f5f5f9;
-      --bg-panel: #ffffff;
-      --text: #222222;
-      --accent: #1976d2;
-      --accent-soft: #e3f2fd;
-      --danger: #c62828;
-      --success: #2e7d32;
-      --border: #cccccc;
-      --muted: #666666;
-    }
-
-    body.high-contrast {
-      --bg: #000000;
-      --bg-panel: #111111;
-      --text: #ffffff;
-      --accent: #ffcc00;
-      --accent-soft: #333333;
-      --danger: #ff5252;
-      --success: #69f0ae;
-      --border: #555555;
-      --muted: #aaaaaa;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    .app-container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 2.1rem;
-      font-weight: 700;
-    }
-
-    .subtitle {
-      margin: 0;
-      font-size: 1rem;
-      color: var(--muted);
-    }
-
-    .mode-toggle {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin: 16px 0;
-      flex-wrap: wrap;
-    }
-
-    .mode-toggle button {
-      padding: 8px 16px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--bg-panel);
-      cursor: pointer;
-      font-size: 1rem;
-      min-width: 130px;
-    }
-
-    .mode-toggle button.active {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
-      font-weight: 600;
-    }
-
-    .panel {
-      background: var(--bg-panel);
-      border-radius: 16px;
-      padding: 16px;
-      border: 1px solid var(--border);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-      margin-bottom: 16px;
-    }
-
-    .flex {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .flex-space {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .difficulty-buttons {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .difficulty-buttons button {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      font-size: 0.95rem;
-      cursor: pointer;
-      background: var(--bg-panel);
-      min-width: 90px;
-    }
-
-    .difficulty-buttons button.active {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-      font-weight: 600;
-    }
-
-    .badge {
-      font-size: 1.1rem;
-      margin-right: 4px;
-    }
-
-    .question-display {
-      font-size: 1.6rem;
-      text-align: center;
-      margin: 8px 0 16px;
-      min-height: 3rem;
-    }
-
-    .answer-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .answer-row input[type="text"] {
-      font-size: 1.4rem;
-      padding: 6px 10px;
-      min-width: 160px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      text-align: center;
-    }
-
-    .answer-row button {
-      font-size: 1rem;
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      background: var(--bg-panel);
-    }
-
-    .answer-row button.primary {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
-      font-weight: 600;
-    }
-
-    .answer-row button:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    .toggles-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
-      font-size: 0.95rem;
-    }
-
-    .toggle-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    select {
-      padding: 4px 6px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      font-size: 0.95rem;
-    }
-
-    .feedback-layout {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .feedback-panel, .summary-panel {
-      flex: 1 1 240px;
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: var(--accent-soft);
-      min-height: 80px;
-    }
-
-    .feedback-title {
-      font-weight: 600;
-      margin-bottom: 4px;
-      font-size: 1.05rem;
-    }
-
-    .feedback-message {
-      font-size: 1rem;
-      min-height: 1.4em;
-    }
-
-    .feedback-message.correct {
-      color: var(--success);
-      font-weight: 600;
-    }
-
-    .feedback-message.incorrect {
-      color: var(--danger);
-      font-weight: 600;
-    }
-
-    .small-text {
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .steps {
-      margin-top: 6px;
-      font-size: 0.95rem;
-    }
-
-    .steps p {
-      margin: 2px 0;
-    }
-
-    .summary-panel ul {
-      list-style: none;
-      padding-left: 0;
-      margin: 4px 0 0;
-      font-size: 0.95rem;
-    }
-
-    .summary-panel li {
-      margin: 2px 0;
-    }
-
-    details {
-      margin-top: 6px;
-      font-size: 0.9rem;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 8px;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    /* Worksheet mode */
-    .worksheet-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .worksheet-controls label {
-      font-size: 0.95rem;
-    }
-
-    .worksheet-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .worksheet-actions button {
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg-panel);
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-
-    .worksheet {
-      margin-top: 12px;
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-    }
-
-    .worksheet-header {
-      font-weight: 600;
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-
-    .worksheet-list {
-      list-style: decimal;
-      padding-left: 24px;
-    }
-
-    .worksheet-question {
-      margin-bottom: 24px; /* spacing between questions */
-      line-height: 1.5;
-    }
-
-    .worksheet-question .q-text {
-      font-size: 1rem;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .worksheet-question .answer-line {
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
-
-    .worksheet-question .answer-line span.answer {
-      display: none;
-      font-weight: 600;
-      color: var(--success);
-    }
-
-    .worksheet-question button.reveal-one {
-      margin-top: 4px;
-      font-size: 0.85rem;
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--bg-panel);
-      cursor: pointer;
-    }
-
-    /* Dev panel */
-    #dev-panel {
-      margin-top: 12px;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px dashed var(--border);
-      background: #fff3e0;
-      font-size: 0.9rem;
-      display: none;
-    }
-
-    #dev-output {
-      margin-top: 6px;
-      white-space: pre-wrap;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      max-height: 260px;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 700px) {
-      .question-display {
-        font-size: 1.3rem;
-      }
-
-      .answer-row input[type="text"] {
-        font-size: 1.2rem;
-        min-width: 130px;
-      }
-
-      .panel {
-        padding: 12px;
-      }
-
-      .app-container {
-        padding: 12px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Percent Change: Increase and Decrease – Mr. McLean Math</title>
+<style>
+:root{
+  --bg:#f5f6f9;--card:#fff;--text:#20242c;--muted:#667085;--border:#dfe3e8;
+  --accent:#1976d2;--soft:#e9f2ff;--good:#2e7d32;--bad:#c62828;
+  --shadow:0 8px 24px rgba(16,24,40,.07);--radius:18px;
+  --font:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font)}
+.wrap{max-width:920px;margin:0 auto;padding:20px 14px 28px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+h1{margin:0;font-size:clamp(25px,3vw,34px);line-height:1.1}
+.subtitle{margin:5px 0 0;color:var(--muted);font-size:14px}
+.tabs,.levels,.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+button.active,button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.label{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:6px}
+.question{font-size:clamp(21px,2.5vw,29px);font-weight:850;line-height:1.35;text-align:center;margin:12px auto;max-width:760px}
+.answer-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.answer-row input{width:min(280px,100%);font:inherit;font-size:18px;padding:11px 12px;border:1px solid var(--border);border-radius:12px;text-align:center}
+.feedback{margin-top:14px;border:1px solid var(--border);border-radius:14px;padding:12px;background:#fafafa;min-height:74px}
+.feedback-title{font-weight:900;font-size:18px}.feedback-title.good{color:var(--good)}.feedback-title.bad{color:var(--bad)}
+.feedback-sub{margin-top:4px;color:var(--muted);font-size:13px;line-height:1.4}
+.steps{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:13px;line-height:1.55;color:#475467}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{border:1px solid var(--border);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:850}
+.worksheet{display:none}
+.ws-top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+select{font:inherit;border:1px solid var(--border);border-radius:10px;background:#fff;padding:9px 10px}
+.ws-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ws-item{border:1px solid var(--border);border-radius:14px;padding:12px;break-inside:avoid}
+.ws-q{font-size:14px;font-weight:800;line-height:1.45}
+.ws-answer{display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:13px;font-weight:850;color:var(--good)}
+.ws-answer.show{display:block}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}
+@media(max-width:720px){.ws-list{grid-template-columns:1fr}}
+@media(max-width:520px){.answer-row{align-items:stretch}.answer-row input{width:100%}}
+@media print{
+  body{background:#fff}.wrap{max-width:none;padding:0}
+  header,#practiceCard,.no-print,.footer{display:none!important}
+  #worksheetCard{display:block!important;border:0;box-shadow:none;padding:0}
+  .ws-list{grid-template-columns:1fr 1fr}.ws-answer{display:none!important}
+}
+</style>
 </head>
 <body>
-  <div class="app-container">
-    <header>
-      <h1>Percent Change: Increase and Decrease</h1>
-      <p class="subtitle">Calculate the percentage increase or percentage decrease between two amounts. A calculator is recommended.</p>
-    </header>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Percent Change</h1>
+    <p class="subtitle">Calculate percentage increase or decrease. Calculator recommended.</p>
+  </div>
+  <div class="tabs">
+    <button id="practiceTab" class="active" type="button">Practice</button>
+    <button id="worksheetTab" type="button">Worksheet</button>
+  </div>
+</header>
 
-    <div class="mode-toggle" role="tablist" aria-label="Mode selector">
-      <button id="mode-game-btn" class="active" role="tab" aria-selected="true">Game Mode</button>
-      <button id="mode-worksheet-btn" role="tab" aria-selected="false">Worksheet Mode</button>
+<section id="practiceCard" class="card">
+  <div class="toolbar">
+    <div>
+      <div class="label">Difficulty</div>
+      <div class="levels">
+        <button class="level active" data-diff="easy" type="button">Foundation</button>
+        <button class="level" data-diff="medium" type="button">Core</button>
+        <button class="level" data-diff="hard" type="button">Challenge</button>
+      </div>
     </div>
-
-    <!-- GAME MODE -->
-    <section id="game-mode" class="panel" aria-label="Game mode">
-      <div class="flex-space" style="margin-bottom: 10px;">
-        <div class="difficulty-buttons" aria-label="Difficulty selector">
-          <button data-diff="easy" class="active"><span class="badge">🟢</span> Easy</button>
-          <button data-diff="medium"><span class="badge">🟡</span> Medium</button>
-          <button data-diff="hard"><span class="badge">🔴</span> Hard</button>
-          <button data-diff="random"><span class="badge">🎲</span> Random</button>
-        </div>
-        <button id="reset-session-btn" style="font-size:0.9rem;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel);cursor:pointer;">
-          Reset session
-        </button>
-      </div>
-
-      <div class="question-display" id="question-display" aria-live="polite"></div>
-
-      <div class="answer-row">
-        <label for="answer-input" class="visually-hidden" aria-hidden="true" style="position:absolute;left:-9999px;">Answer</label>
-        <input type="text" id="answer-input" autocomplete="off" inputmode="decimal" placeholder="Percent change">
-        <button id="submit-btn" class="primary">Submit</button>
-        <button id="next-btn" disabled>Next</button>
-      </div>
-
-      <div class="toggles-row">
-        <div class="toggle-group">
-          <input type="checkbox" id="sound-toggle" checked>
-          <label for="sound-toggle">Sound On</label>
-        </div>
-        <div class="toggle-group">
-          <input type="checkbox" id="timer-toggle">
-          <label for="timer-toggle">Timer</label>
-          <select id="timer-select">
-            <option value="30">30 s</option>
-            <option value="60" selected>60 s</option>
-            <option value="90">90 s</option>
-            <option value="120">120 s</option>
-          </select>
-          <span id="timer-display" class="small-text"></span>
-        </div>
-        <div class="toggle-group">
-          <input type="checkbox" id="contrast-toggle">
-          <label for="contrast-toggle">High contrast</label>
-        </div>
-      </div>
-
-      <div class="feedback-layout" style="margin-top:12px;">
-        <div class="feedback-panel" aria-live="polite">
-          <div class="feedback-title">Feedback</div>
-          <div id="feedback-message" class="feedback-message"></div>
-          <div id="correct-answer-line" class="small-text"></div>
-          <button id="show-steps-btn" style="margin-top:6px;font-size:0.9rem;padding:4px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel);cursor:pointer;display:none;">
-            Show steps
-          </button>
-          <div id="steps-container" class="steps"></div>
-          <div class="small-text" style="margin-top:6px;">
-            Enter = Submit (or Next after checking), Esc = Clear
-          </div>
-        </div>
-        <div class="summary-panel">
-          <div class="feedback-title">Session Summary</div>
-          <ul>
-            <li>Total questions: <span id="stat-total">0</span></li>
-            <li>Correct: <span id="stat-correct">0</span></li>
-            <li>Accuracy: <span id="stat-accuracy">0%</span></li>
-            <li>Score: <span id="stat-score">0</span></li>
-            <li>Current streak: <span id="stat-streak">0</span></li>
-            <li>Best streak: <span id="stat-best-streak">0</span></li>
-          </ul>
-          <details id="incorrect-details">
-            <summary>View incorrect questions</summary>
-            <div id="incorrect-list"></div>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- WORKSHEET MODE -->
-    <section id="worksheet-mode" class="panel" aria-label="Worksheet mode" style="display:none;">
-      <div class="worksheet-controls">
-        <div class="flex" style="gap:6px;">
-          <label for="worksheet-difficulty">Difficulty:</label>
-          <select id="worksheet-difficulty">
-            <option value="easy">🟢 Easy</option>
-            <option value="medium">🟡 Medium</option>
-            <option value="hard">🔴 Hard</option>
-          </select>
-        </div>
-        <div class="flex" style="gap:6px;">
-          <label for="worksheet-count">Number of questions:</label>
-          <select id="worksheet-count">
-            <option value="5">5</option>
-            <option value="10" selected>10</option>
-            <option value="15">15</option>
-          </select>
-        </div>
-        <div class="worksheet-actions">
-          <button id="generate-worksheet-btn">Generate worksheet</button>
-          <button id="reveal-all-btn">Reveal all answers</button>
-          <button id="hide-all-btn">Hide all answers</button>
-        </div>
-      </div>
-      <div class="worksheet">
-        <div class="worksheet-header">
-          Instruction: For each question, calculate the percentage increase or percentage decrease and round as instructed.
-        </div>
-        <ol id="worksheet-list" class="worksheet-list">
-          <!-- Worksheet questions injected here -->
-        </ol>
-      </div>
-    </section>
-
-    <div id="dev-panel">
-      <strong>Developer Tests (dev mode)</strong>
-      <button id="run-dev-tests-btn" style="margin-left:8px;">Run tests</button>
-      <div id="dev-output"></div>
-    </div>
-
-    <div class="footer">
-      Created by Mr. McLean Math.
-    </div>
+    <button id="newBtn" type="button">New Question</button>
   </div>
 
-  <script>
-    // ---------- Utility functions ----------
-    function formatNumber(value) {
-      const isNegative = value < 0;
-      let abs = Math.abs(value);
-      let str = abs % 1 === 0 ? abs.toString() : abs.toFixed(2);
-      if (str.includes(".")) {
-        str = str.replace(/0+$/, "").replace(/\.$/, "");
-      }
-      const parts = str.split(".");
-      let intPart = parts[0];
-      const decPart = parts.length > 1 ? "." + parts[1] : "";
-      intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-      return (isNegative ? "-" : "") + intPart + decPart;
-    }
-
-    function formatPercent(value) {
-      let v = value;
-      // Round to 2 decimals
-      v = Math.round(v * 100) / 100;
-      let str = v % 1 === 0 ? v.toString() : v.toFixed(2);
-      if (str.includes(".")) {
-        str = str.replace(/0+$/, "").replace(/\.$/, "");
-      }
-      return str + "%";
-    }
-
-    function formatRoundedPercent(value, decimalPlaces) {
-      return Number(value).toFixed(decimalPlaces) + "%";
-    }
-
-    function parseNumericInput(str) {
-      if (!str) return NaN;
-      str = str.trim().replace(/\s+/g, "");
-      // Allow optional percent sign in the input
-      str = str.replace(/%/g, "");
-      str = str.replace(",", ".");
-      const val = Number(str);
-      return isNaN(val) ? NaN : val;
-    }
-
-    // ---------- Question generation ----------
-    function getRandomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    function chooseRandom(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    const DIFFICULTY_SETTINGS = {
-      easy: {
-        originalMin: 10,
-        originalMax: 120,
-        changeMin: 2,
-        changeMax: 60,
-        decimalPlaces: 0,
-        roundingText: "Round your answer to the nearest whole percent."
-      },
-      medium: {
-        originalMin: 40,
-        originalMax: 750,
-        changeMin: 7,
-        changeMax: 325,
-        decimalPlaces: 1,
-        roundingText: "Round your answer to the nearest tenth of a percent."
-      },
-      hard: {
-        originalMin: 125,
-        originalMax: 5000,
-        changeMin: 19,
-        changeMax: 4200,
-        decimalPlaces: 2,
-        roundingText: "Round your answer to the nearest hundredth of a percent."
-      }
-    };
-
-    function roundToPlaces(value, places) {
-      const factor = Math.pow(10, places);
-      return Math.round((value + Number.EPSILON) * factor) / factor;
-    }
-
-    function generatePercentChangeQuestion(difficulty) {
-      let diff = difficulty;
-      if (difficulty === "random") {
-        diff = chooseRandom(["easy", "medium", "hard"]);
-      }
-
-      const settings = DIFFICULTY_SETTINGS[diff];
-      let tries = 0;
-
-      while (tries < 300) {
-        tries++;
-
-        const original = getRandomInt(settings.originalMin, settings.originalMax);
-        const direction = Math.random() < 0.5 ? "increase" : "decrease";
-
-        let maxChange = settings.changeMax;
-        if (direction === "decrease") {
-          maxChange = Math.min(maxChange, original - 1);
-        }
-        if (maxChange < settings.changeMin) continue;
-
-        const changeAmount = getRandomInt(settings.changeMin, maxChange);
-        const newAmount = direction === "increase"
-          ? original + changeAmount
-          : original - changeAmount;
-
-        const exactPercent = (changeAmount / original) * 100;
-        const roundedPercent = roundToPlaces(exactPercent, settings.decimalPlaces);
-
-        // Avoid questions whose rounded answer is 0%, and avoid overly neat answers
-        // too often so the modes genuinely practise calculator use.
-        if (roundedPercent <= 0) continue;
-        const isVeryNeat = Math.abs(exactPercent - Math.round(exactPercent)) < 1e-9;
-        if (isVeryNeat && Math.random() < 0.8) continue;
-
-        return {
-          difficulty: diff,
-          original: original,
-          newAmount: newAmount,
-          changeAmount: changeAmount,
-          exactPercent: exactPercent,
-          percentChange: roundedPercent,
-          decimalPlaces: settings.decimalPlaces,
-          roundingText: settings.roundingText,
-          direction: direction
-        };
-      }
-
-      // Fallback
-      const fallback = {
-        easy: { original: 37, newAmount: 52 },
-        medium: { original: 286, newAmount: 347 },
-        hard: { original: 1375, newAmount: 984 }
-      }[diff];
-      const direction = fallback.newAmount > fallback.original ? "increase" : "decrease";
-      const changeAmount = Math.abs(fallback.newAmount - fallback.original);
-      const exactPercent = (changeAmount / fallback.original) * 100;
-      return {
-        difficulty: diff,
-        original: fallback.original,
-        newAmount: fallback.newAmount,
-        changeAmount,
-        exactPercent,
-        percentChange: roundToPlaces(exactPercent, settings.decimalPlaces),
-        decimalPlaces: settings.decimalPlaces,
-        roundingText: settings.roundingText,
-        direction
-      };
-    }
-
-    function questionToText(q) {
-      const originalStr = formatNumber(q.original);
-      const newStr = formatNumber(q.newAmount);
-      const task = q.direction === "increase"
-        ? "An amount increased from " + originalStr + " to " + newStr + ". Calculate the percentage increase."
-        : "An amount decreased from " + originalStr + " to " + newStr + ". Calculate the percentage decrease.";
-      return task + " " + q.roundingText;
-    }
-
-    // ---------- Game state ----------
-    const difficultyButtons = document.querySelectorAll(".difficulty-buttons button");
-    const questionDisplay = document.getElementById("question-display");
-    const answerInput = document.getElementById("answer-input");
-    const submitBtn = document.getElementById("submit-btn");
-    const nextBtn = document.getElementById("next-btn");
-    const feedbackMessage = document.getElementById("feedback-message");
-    const correctAnswerLine = document.getElementById("correct-answer-line");
-    const showStepsBtn = document.getElementById("show-steps-btn");
-    const stepsContainer = document.getElementById("steps-container");
-    const statTotal = document.getElementById("stat-total");
-    const statCorrect = document.getElementById("stat-correct");
-    const statAccuracy = document.getElementById("stat-accuracy");
-    const statScore = document.getElementById("stat-score");
-    const statStreak = document.getElementById("stat-streak");
-    const statBestStreak = document.getElementById("stat-best-streak");
-    const incorrectDetails = document.getElementById("incorrect-details");
-    const incorrectList = document.getElementById("incorrect-list");
-    const resetSessionBtn = document.getElementById("reset-session-btn");
-
-    const soundToggle = document.getElementById("sound-toggle");
-    const timerToggle = document.getElementById("timer-toggle");
-    const timerSelect = document.getElementById("timer-select");
-    const timerDisplay = document.getElementById("timer-display");
-    const contrastToggle = document.getElementById("contrast-toggle");
-
-    const modeGameBtn = document.getElementById("mode-game-btn");
-    const modeWorksheetBtn = document.getElementById("mode-worksheet-btn");
-    const gameModeSection = document.getElementById("game-mode");
-    const worksheetModeSection = document.getElementById("worksheet-mode");
-
-    const worksheetDifficulty = document.getElementById("worksheet-difficulty");
-    const worksheetCount = document.getElementById("worksheet-count");
-    const generateWorksheetBtn = document.getElementById("generate-worksheet-btn");
-    const revealAllBtn = document.getElementById("reveal-all-btn");
-    const hideAllBtn = document.getElementById("hide-all-btn");
-    const worksheetList = document.getElementById("worksheet-list");
-
-    const devPanel = document.getElementById("dev-panel");
-    const runDevTestsBtn = document.getElementById("run-dev-tests-btn");
-    const devOutput = document.getElementById("dev-output");
-
-    let currentDifficulty = "easy";
-    let currentQuestion = null;
-    let questionChecked = false;
-
-    let stats = {
-      total: 0,
-      correct: 0,
-      score: 0,
-      streak: 0,
-      bestStreak: 0,
-      incorrect: []
-    };
-
-    // Timer state
-    let timerId = null;
-    let remainingSeconds = 0;
-
-    // Sound
-    let audioCtx = null;
-    function playBeep(frequency, duration) {
-      if (!soundToggle.checked) return;
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.type = "sine";
-        oscillator.frequency.value = frequency;
-        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + duration / 1000);
-      } catch (e) {
-        // ignore
-      }
-    }
-
-    function beepCorrect() {
-      playBeep(880, 150);
-    }
-
-    function beepIncorrect() {
-      playBeep(220, 200);
-    }
-
-    // ---------- Timer ----------
-    function resetTimer() {
-      if (timerId) {
-        clearInterval(timerId);
-        timerId = null;
-      }
-      timerDisplay.textContent = "";
-      if (!timerToggle.checked) return;
-
-      const secs = parseInt(timerSelect.value, 10) || 60;
-      remainingSeconds = secs;
-      timerDisplay.textContent = remainingSeconds + " s";
-
-      timerId = setInterval(() => {
-        remainingSeconds -= 1;
-        if (remainingSeconds <= 0) {
-          clearInterval(timerId);
-          timerId = null;
-          timerDisplay.textContent = "0 s";
-          handleTimeUp();
-        } else {
-          timerDisplay.textContent = remainingSeconds + " s";
-        }
-      }, 1000);
-    }
-
-    function handleTimeUp() {
-      if (questionChecked) return;
-      processAnswer("", true);
-    }
-
-    // ---------- Game logic ----------
-    function setDifficulty(diff) {
-      currentDifficulty = diff;
-      difficultyButtons.forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.diff === diff);
-      });
-      newQuestion();
-    }
-
-    function newQuestion() {
-      currentQuestion = generatePercentChangeQuestion(currentDifficulty);
-      questionDisplay.textContent = questionToText(currentQuestion);
-      answerInput.value = "";
-      answerInput.focus();
-
-      feedbackMessage.textContent = "";
-      feedbackMessage.className = "feedback-message";
-      correctAnswerLine.textContent = "";
-      showStepsBtn.style.display = "none";
-      stepsContainer.textContent = "";
-      questionChecked = false;
-
-      nextBtn.disabled = true;
-
-      resetTimer();
-    }
-
-    function updateStatsDisplay() {
-      statTotal.textContent = stats.total;
-      statCorrect.textContent = stats.correct;
-      const accuracy = stats.total === 0 ? 0 : Math.round((stats.correct / stats.total) * 100);
-      statAccuracy.textContent = accuracy + "%";
-      statScore.textContent = stats.score;
-      statStreak.textContent = stats.streak;
-      statBestStreak.textContent = stats.bestStreak;
-
-      incorrectList.innerHTML = "";
-      if (stats.incorrect.length === 0) {
-        incorrectList.textContent = "No incorrect questions yet.";
-      } else {
-        const ul = document.createElement("ul");
-        ul.style.paddingLeft = "16px";
-        stats.incorrect.forEach(item => {
-          const li = document.createElement("li");
-          li.textContent =
-            item.questionText +
-            " | Your answer: " +
-            (item.userAnswer === "" ? "[no answer]" : item.userAnswer) +
-            " | Correct: " +
-            formatRoundedPercent(item.correctPercent, item.decimalPlaces);
-          ul.appendChild(li);
-        });
-        incorrectList.appendChild(ul);
-      }
-    }
-
-    function buildStepsExplanation(q) {
-      const o = q.original;
-      const n = q.newAmount;
-      const diff = n - o;
-      const absDiff = Math.abs(diff);
-      const frac = absDiff / o;
-      const exactPercent = frac * 100;
-      const percent = q.percentChange;
-      const lines = [];
-
-      lines.push("Original amount: " + formatNumber(o));
-      lines.push("New amount: " + formatNumber(n));
-      lines.push("Difference: " + formatNumber(absDiff));
-      lines.push("Fraction: " + formatNumber(absDiff) + " ÷ " + formatNumber(o) + " = " + frac.toFixed(6));
-      lines.push("Unrounded percent: " + frac.toFixed(6) + " × 100 = " + exactPercent.toFixed(6) + "%");
-      lines.push(q.roundingText + " Answer: " + formatRoundedPercent(percent, q.decimalPlaces));
-
-      if (q.direction === "increase") {
-        lines.push("This is a percentage increase.");
-      } else {
-        lines.push("This is a percentage decrease.");
-      }
-
-      return lines;
-    }
-
-    function processAnswer(rawInput, timeUp = false) {
-      if (!currentQuestion) return;
-      questionChecked = true;
-      nextBtn.disabled = false;
-
-      if (timerId) {
-        clearInterval(timerId);
-        timerId = null;
-      }
-
-      const trimmed = rawInput.trim();
-      const userVal = parseNumericInput(trimmed);
-      const correctVal = roundToPlaces(currentQuestion.exactPercent, currentQuestion.decimalPlaces);
-
-      stats.total += 1;
-
-      let isCorrect = false;
-      if (!timeUp && !isNaN(userVal)) {
-        const tolerance = 0.5 / Math.pow(10, currentQuestion.decimalPlaces + 2);
-        if (Math.abs(userVal - correctVal) < tolerance) {
-          isCorrect = true;
-        }
-      }
-
-      if (isCorrect) {
-        stats.correct += 1;
-        stats.streak += 1;
-        if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
-        stats.score += 10;
-        if (stats.streak > 0 && stats.streak % 5 === 0) {
-          stats.score += 5;
-        }
-
-        feedbackMessage.textContent = "Correct!";
-        feedbackMessage.className = "feedback-message correct";
-        correctAnswerLine.textContent = "";
-        showStepsBtn.style.display = "none";
-        stepsContainer.textContent = "";
-        beepCorrect();
-      } else {
-        stats.streak = 0;
-
-        if (timeUp) {
-          feedbackMessage.textContent = "Time's up. That's not correct.";
-        } else if (trimmed === "" || isNaN(userVal)) {
-          feedbackMessage.textContent = "That is not a valid number.";
-        } else {
-          feedbackMessage.textContent = "Incorrect.";
-        }
-        feedbackMessage.className = "feedback-message incorrect";
-        correctAnswerLine.textContent = "Correct answer: " + formatRoundedPercent(correctVal, currentQuestion.decimalPlaces);
-        showStepsBtn.style.display = "inline-block";
-        stepsContainer.textContent = "";
-        beepIncorrect();
-
-        stats.incorrect.push({
-          questionText: questionToText(currentQuestion),
-          userAnswer: trimmed,
-          correctPercent: correctVal,
-          decimalPlaces: currentQuestion.decimalPlaces
-        });
-      }
-
-      updateStatsDisplay();
-    }
-
-    function handleSubmit() {
-      if (!currentQuestion) return;
-      if (!questionChecked) {
-        const raw = answerInput.value;
-        if (!raw && !timerToggle.checked) {
-          feedbackMessage.textContent = "Please enter an answer.";
-          feedbackMessage.className = "feedback-message incorrect";
-          return;
-        }
-        processAnswer(raw, false);
-      } else {
-        handleNext();
-      }
-    }
-
-    function handleNext() {
-      newQuestion();
-    }
-
-    // ---------- Worksheet mode ----------
-    function generateWorksheetQuestion(diff) {
-      return generatePercentChangeQuestion(diff);
-    }
-
-    function renderWorksheet() {
-      const diff = worksheetDifficulty.value;
-      const count = parseInt(worksheetCount.value, 10) || 10;
-      worksheetList.innerHTML = "";
-      document.querySelector(".worksheet-header").textContent =
-        "Instruction: Calculate each percentage change. " + DIFFICULTY_SETTINGS[diff].roundingText;
-
-      for (let i = 0; i < count; i++) {
-        const q = generateWorksheetQuestion(diff);
-        const li = document.createElement("li");
-        li.className = "worksheet-question";
-
-        const qTextSpan = document.createElement("span");
-        qTextSpan.className = "q-text";
-        qTextSpan.textContent = questionToText(q);
-        li.appendChild(qTextSpan);
-
-        const answerLine = document.createElement("div");
-        answerLine.className = "answer-line";
-        answerLine.innerHTML = "Answer: <span class=\"answer\">" + formatRoundedPercent(q.percentChange, q.decimalPlaces) + "</span>";
-        li.appendChild(answerLine);
-
-        const revealBtn = document.createElement("button");
-        revealBtn.className = "reveal-one";
-        revealBtn.type = "button";
-        revealBtn.textContent = "Show answer";
-        revealBtn.addEventListener("click", () => {
-          const ansSpan = answerLine.querySelector(".answer");
-          if (ansSpan.style.display === "inline") {
-            ansSpan.style.display = "none";
-            revealBtn.textContent = "Show answer";
-          } else {
-            ansSpan.style.display = "inline";
-            revealBtn.textContent = "Hide answer";
-          }
-        });
-        li.appendChild(revealBtn);
-
-        worksheetList.appendChild(li);
-      }
-    }
-
-    function revealAllAnswers(show) {
-      const answers = worksheetList.querySelectorAll(".answer");
-      const buttons = worksheetList.querySelectorAll(".reveal-one");
-      answers.forEach(ans => {
-        ans.style.display = show ? "inline" : "none";
-      });
-      buttons.forEach(btn => {
-        btn.textContent = show ? "Hide answer" : "Show answer";
-      });
-    }
-
-    // ---------- Mode switching ----------
-    function setMode(mode) {
-      if (mode === "game") {
-        gameModeSection.style.display = "";
-        worksheetModeSection.style.display = "none";
-        modeGameBtn.classList.add("active");
-        modeWorksheetBtn.classList.remove("active");
-        modeGameBtn.setAttribute("aria-selected", "true");
-        modeWorksheetBtn.setAttribute("aria-selected", "false");
-      } else {
-        gameModeSection.style.display = "none";
-        worksheetModeSection.style.display = "";
-        modeGameBtn.classList.remove("active");
-        modeWorksheetBtn.classList.add("active");
-        modeGameBtn.setAttribute("aria-selected", "false");
-        modeWorksheetBtn.setAttribute("aria-selected", "true");
-      }
-    }
-
-    // ---------- Reset session ----------
-    function resetSession() {
-      stats = {
-        total: 0,
-        correct: 0,
-        score: 0,
-        streak: 0,
-        bestStreak: 0,
-        incorrect: []
-      };
-      updateStatsDisplay();
-      feedbackMessage.textContent = "";
-      feedbackMessage.className = "feedback-message";
-      correctAnswerLine.textContent = "";
-      showStepsBtn.style.display = "none";
-      stepsContainer.textContent = "";
-      if (timerId) {
-        clearInterval(timerId);
-        timerId = null;
-      }
-      timerDisplay.textContent = "";
-      newQuestion();
-    }
-
-    // ---------- Event listeners ----------
-    difficultyButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const diff = btn.dataset.diff;
-        setDifficulty(diff);
-      });
-    });
-
-    submitBtn.addEventListener("click", handleSubmit);
-    nextBtn.addEventListener("click", handleNext);
-
-    answerInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleSubmit();
-      } else if (e.key === "Escape") {
-        answerInput.value = "";
-      }
-    });
-
-    timerToggle.addEventListener("change", resetTimer);
-    timerSelect.addEventListener("change", resetTimer);
-
-    contrastToggle.addEventListener("change", () => {
-      document.body.classList.toggle("high-contrast", contrastToggle.checked);
-    });
-
-    resetSessionBtn.addEventListener("click", resetSession);
-
-    showStepsBtn.addEventListener("click", () => {
-      if (!currentQuestion) return;
-      const lines = buildStepsExplanation(currentQuestion);
-      stepsContainer.innerHTML = "";
-      lines.forEach(line => {
-        const p = document.createElement("p");
-        p.textContent = line;
-        stepsContainer.appendChild(p);
-      });
-    });
-
-    modeGameBtn.addEventListener("click", () => setMode("game"));
-    modeWorksheetBtn.addEventListener("click", () => setMode("worksheet"));
-
-    generateWorksheetBtn.addEventListener("click", renderWorksheet);
-    revealAllBtn.addEventListener("click", () => revealAllAnswers(true));
-    hideAllBtn.addEventListener("click", () => revealAllAnswers(false));
-
-    // ---------- Dev tests ----------
-    function isDevMode() {
-      const params = new URLSearchParams(window.location.search);
-      return params.has("dev") && params.get("dev") === "1";
-    }
-
-    function runDevTests() {
-      const results = [];
-      function log(msg) { results.push(msg); }
-
-      const samples = { easy: [], medium: [], hard: [] };
-      for (const diff of Object.keys(samples)) {
-        for (let i = 0; i < 100; i++) samples[diff].push(generatePercentChangeQuestion(diff));
-      }
-
-      const easyWhole = samples.easy.every(q => q.decimalPlaces === 0 && q.percentChange === Math.round(q.percentChange));
-      log("Test 1 (Easy rounds to whole percent): " + (easyWhole ? "PASS" : "FAIL"));
-
-      const mediumTenths = samples.medium.every(q => q.decimalPlaces === 1 && Math.abs(q.percentChange * 10 - Math.round(q.percentChange * 10)) < 1e-9);
-      log("Test 2 (Medium rounds to tenths): " + (mediumTenths ? "PASS" : "FAIL"));
-
-      const hardHundredths = samples.hard.every(q => q.decimalPlaces === 2 && Math.abs(q.percentChange * 100 - Math.round(q.percentChange * 100)) < 1e-9);
-      log("Test 3 (Hard rounds to hundredths): " + (hardHundredths ? "PASS" : "FAIL"));
-
-      const calculatorVariety = Object.values(samples).flat().filter(q => Math.abs(q.exactPercent - Math.round(q.exactPercent)) > 1e-9).length > 250;
-      log("Test 4 (Mostly calculator-style answers): " + (calculatorVariety ? "PASS" : "FAIL"));
-
-      const validAmounts = Object.values(samples).flat().every(q => q.original > 0 && q.newAmount > 0 && Number.isInteger(q.original) && Number.isInteger(q.newAmount));
-      log("Test 5 (Positive whole-number amounts): " + (validAmounts ? "PASS" : "FAIL"));
-
-      const directions = Object.values(samples).flat().reduce((a,q) => (a[q.direction]=true,a), {increase:false,decrease:false});
-      log("Test 6 (Increase and decrease included): " + (directions.increase && directions.decrease ? "PASS" : "FAIL"));
-
-      let coverage = {easy:false, medium:false, hard:false};
-      for (let i = 0; i < 100; i++) coverage[generatePercentChangeQuestion("random").difficulty] = true;
-      log("Test 7 (Random covers all difficulties): " + (coverage.easy && coverage.medium && coverage.hard ? "PASS" : "FAIL"));
-
-      const testCount = 7;
-      worksheetCount.value = testCount.toString();
-      worksheetDifficulty.value = "easy";
-      renderWorksheet();
-      const liCount = worksheetList.querySelectorAll("li").length;
-      log("Test 8 (Worksheet count): " + (liCount === testCount ? "PASS" : "FAIL"));
-
-      const formatted = formatNumber(12345.67);
-      log("Test 9 (Thousands separator spaces): " + (formatted === "12 345.67" ? "PASS" : "FAIL") + " (" + formatted + ")");
-
-      const prev = document.body.classList.contains("high-contrast");
-      document.body.classList.toggle("high-contrast", true);
-      const after = document.body.classList.contains("high-contrast");
-      document.body.classList.toggle("high-contrast", prev);
-      log("Test 10 (High contrast class): " + (after ? "PASS" : "FAIL"));
-
-      devOutput.textContent = results.join("\n");
-    }
-
-    if (isDevMode()) {
-      devPanel.style.display = "block";
-    }
-
-    if (runDevTestsBtn) {
-      runDevTestsBtn.addEventListener("click", runDevTests);
-    }
-
-    // ---------- Initial setup ----------
-    window.addEventListener("load", () => {
-      contrastToggle.checked = false;
-      document.body.classList.remove("high-contrast");
-      updateStatsDisplay();
-      newQuestion();
-      renderWorksheet();
-    });
-  </script>
+  <div id="question" class="question"></div>
+
+  <div class="answer-row">
+    <input id="answer" type="text" inputmode="decimal" autocomplete="off" placeholder="Percent change">
+    <button id="checkBtn" class="primary" type="button">Check</button>
+    <button id="nextBtn" type="button" disabled>Next</button>
+    <button id="clearBtn" type="button">Clear</button>
+  </div>
+
+  <div class="feedback">
+    <div id="feedbackTitle" class="feedback-title">Ready.</div>
+    <div id="feedbackSub" class="feedback-sub">Enter the percentage change. You may include the % sign.</div>
+    <div id="steps" class="steps"></div>
+    <button id="stepsBtn" type="button" style="display:none;margin-top:10px">Show Steps</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">Correct: <span id="correct">0</span></div>
+    <div class="stat">Incorrect: <span id="incorrect">0</span></div>
+  </div>
+</section>
+
+<section id="worksheetCard" class="card worksheet">
+  <div class="ws-top">
+    <div>
+      <div style="font-size:19px;font-weight:900">Worksheet</div>
+      <div id="wsMeta" class="subtitle">Generate percent-change questions.</div>
+    </div>
+    <div class="no-print row">
+      <label style="font-size:13px;font-weight:800">Questions
+        <select id="wsCount"><option>5</option><option selected>10</option><option>15</option></select>
+      </label>
+      <button id="generateWs" class="primary" type="button">Generate</button>
+      <button id="revealAll" type="button" disabled>Reveal All</button>
+      <button id="hideAll" type="button" disabled>Hide All</button>
+      <button id="printBtn" type="button" disabled>Print</button>
+    </div>
+  </div>
+  <div id="wsList" class="ws-list"></div>
+</section>
+
+<div class="footer">Created by Mr. McLean Math.</div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+const randInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const roundTo=(v,p)=>Math.round((v+Number.EPSILON)*10**p)/10**p;
+function formatNumber(v){
+  const str=Number.isInteger(v)?String(v):Number(v).toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
+  const [i,d]=str.split(".");
+  return i.replace(/\B(?=(\d{3})+(?!\d))/g," ")+(d?"."+d:"");
+}
+function formatPercent(v,p){return Number(v).toFixed(p)+"%"}
+function parseInput(s){
+  if(s==null)return null;
+  let t=String(s).trim().replace(/\s+/g,"").replace(/%/g,"").replace(",",".");
+  if(!t||! /^[+]?\d+(?:\.\d+)?$/.test(t))return null;
+  const n=Number(t);return Number.isFinite(n)?n:null;
+}
+
+const SETTINGS={
+  easy:{originalMin:10,originalMax:120,changeMin:2,changeMax:60,dp:0,rounding:"Round to the nearest whole percent."},
+  medium:{originalMin:40,originalMax:750,changeMin:7,changeMax:325,dp:1,rounding:"Round to the nearest tenth of a percent."},
+  hard:{originalMin:125,originalMax:5000,changeMin:19,changeMax:4200,dp:2,rounding:"Round to the nearest hundredth of a percent."}
+};
+
+function generate(diff){
+  const s=SETTINGS[diff];
+  for(let tries=0;tries<300;tries++){
+    const original=randInt(s.originalMin,s.originalMax);
+    const direction=Math.random()<.5?"increase":"decrease";
+    let maxChange=s.changeMax;
+    if(direction==="decrease")maxChange=Math.min(maxChange,original-1);
+    if(maxChange<s.changeMin)continue;
+    const change=randInt(s.changeMin,maxChange);
+    const newAmount=direction==="increase"?original+change:original-change;
+    const exact=(change/original)*100;
+    const rounded=roundTo(exact,s.dp);
+    if(rounded<=0)continue;
+    const neat=Math.abs(exact-Math.round(exact))<1e-9;
+    if(neat&&Math.random()<.8)continue;
+    return {diff,original,newAmount,change,direction,exact,answer:rounded,dp:s.dp,rounding:s.rounding};
+  }
+  const f={easy:[37,52],medium:[286,347],hard:[1375,984]}[diff];
+  const direction=f[1]>f[0]?"increase":"decrease",change=Math.abs(f[1]-f[0]),exact=change/f[0]*100;
+  return {diff,original:f[0],newAmount:f[1],change,direction,exact,answer:roundTo(exact,s.dp),dp:s.dp,rounding:s.rounding};
+}
+function questionText(q){
+  return `An amount ${q.direction==="increase"?"increased":"decreased"} from ${formatNumber(q.original)} to ${formatNumber(q.newAmount)}. Calculate the percentage ${q.direction}. ${q.rounding}`;
+}
+function stepsFor(q){
+  const diff=Math.abs(q.newAmount-q.original);
+  const fraction=diff/q.original;
+  return [
+    `Original amount: ${formatNumber(q.original)}`,
+    `New amount: ${formatNumber(q.newAmount)}`,
+    `Difference: ${formatNumber(diff)}`,
+    `Percentage change = difference ÷ original × 100`,
+    `${formatNumber(diff)} ÷ ${formatNumber(q.original)} × 100 ≈ ${q.exact.toFixed(6)}%`,
+    `${q.rounding} Answer: ${formatPercent(q.answer,q.dp)}`
+  ];
+}
+
+let difficulty="easy",current=null,evaluated=false,correct=0,incorrect=0;
+
+function feedback(kind,title,sub){
+  const t=$("feedbackTitle");t.className="feedback-title"+(kind?" "+kind:"");t.textContent=title;$("feedbackSub").textContent=sub||"";
+}
+function hideSteps(){
+  $("steps").style.display="none";$("steps").textContent="";$("stepsBtn").style.display="none";$("stepsBtn").textContent="Show Steps";
+}
+function newQuestion(){
+  current=generate(difficulty);evaluated=false;
+  $("question").textContent=questionText(current);
+  $("answer").value="";$("answer").disabled=false;$("checkBtn").disabled=false;$("nextBtn").disabled=true;
+  hideSteps();feedback("","Ready.","Enter the percentage change. You may include the % sign.");$("answer").focus();
+}
+function check(){
+  if(!current||evaluated)return;
+  const val=parseInput($("answer").value);
+  if(val===null){feedback("","Enter an answer.","Type a valid number. Blank or invalid answers are not counted.");return;}
+  evaluated=true;$("answer").disabled=true;$("checkBtn").disabled=true;$("nextBtn").disabled=false;
+  $("steps").innerHTML=stepsFor(current).join("<br>");$("stepsBtn").style.display="inline-block";
+  const ok=Math.abs(val-current.answer)<1e-9;
+  if(ok){correct++;$("correct").textContent=correct;feedback("good","Correct!","Press Enter or Next for a new question.");}
+  else{incorrect++;$("incorrect").textContent=incorrect;feedback("bad","Incorrect.",`Correct answer: ${formatPercent(current.answer,current.dp)}`);}
+}
+function clearAnswer(){if(evaluated)return;$("answer").value="";$("answer").focus()}
+
+document.querySelectorAll(".level").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".level").forEach(x=>x.classList.remove("active"));b.classList.add("active");difficulty=b.dataset.diff;newQuestion();
+}));
+$("newBtn").addEventListener("click",newQuestion);$("checkBtn").addEventListener("click",check);$("nextBtn").addEventListener("click",newQuestion);$("clearBtn").addEventListener("click",clearAnswer);
+$("answer").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();evaluated?newQuestion():check()}else if(e.key==="Escape"){e.preventDefault();clearAnswer()}});
+$("stepsBtn").addEventListener("click",()=>{const show=$("steps").style.display!=="block";$("steps").style.display=show?"block":"none";$("stepsBtn").textContent=show?"Hide Steps":"Show Steps"});
+
+function showPractice(){$("practiceTab").classList.add("active");$("worksheetTab").classList.remove("active");$("practiceCard").style.display="block";$("worksheetCard").style.display="none"}
+function showWorksheet(){$("worksheetTab").classList.add("active");$("practiceTab").classList.remove("active");$("practiceCard").style.display="none";$("worksheetCard").style.display="block"}
+$("practiceTab").addEventListener("click",showPractice);$("worksheetTab").addEventListener("click",showWorksheet);
+
+function generateWorksheet(){
+  const n=Number($("wsCount").value),list=$("wsList");list.innerHTML="";
+  const labels={easy:"Foundation",medium:"Core",hard:"Challenge"};
+  for(let i=0;i<n;i++){
+    const q=generate(difficulty),box=document.createElement("div");box.className="ws-item";
+    const qt=document.createElement("div");qt.className="ws-q";qt.textContent=`${i+1}. ${questionText(q)}`;
+    const ans=document.createElement("div");ans.className="ws-answer";ans.textContent=`Answer: ${formatPercent(q.answer,q.dp)}`;
+    const btn=document.createElement("button");btn.type="button";btn.className="no-print";btn.style.marginTop="8px";btn.textContent="Reveal";
+    btn.addEventListener("click",()=>{ans.classList.toggle("show");btn.textContent=ans.classList.contains("show")?"Hide":"Reveal"});
+    box.append(qt,ans,btn);list.appendChild(box);
+  }
+  $("wsMeta").textContent=`${labels[difficulty]} • ${n} questions`;
+  $("revealAll").disabled=$("hideAll").disabled=$("printBtn").disabled=false;
+}
+$("generateWs").addEventListener("click",generateWorksheet);
+$("revealAll").addEventListener("click",()=>document.querySelectorAll(".ws-answer").forEach(x=>x.classList.add("show")));
+$("hideAll").addEventListener("click",()=>document.querySelectorAll(".ws-answer").forEach(x=>x.classList.remove("show")));
+$("printBtn").addEventListener("click",()=>window.print());
+
+window.__MMM_TEST__={generate,SETTINGS};
+newQuestion();
+})();
+</script>
 </body>
 </html>
